@@ -1,0 +1,19 @@
+{
+  "name": "cs595-webrtc-design-implementation",
+  "version": "1.0.0",
+  "description": "WPI CS 595-A02 - Independent Study - WebRTC Design &amp; Implementation",
+  "main": "server.js",
+  "scripts": {
+    "test": "node server.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/fedeit/CS595-WebRTC-Design-Implementation.git"
+  },
+  "author": "Federico Galbiati",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/fedeit/CS595-WebRTC-Design-Implementation/issues"
+  },
+  "homepage": "https://github.com/fedeit/CS595-WebRTC-Design-Implementation#readme"
+}
