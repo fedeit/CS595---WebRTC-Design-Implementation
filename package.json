@@ -15,5 +15,9 @@
   "bugs": {
     "url": "https://github.com/fedeit/CS595-WebRTC-Design-Implementation/issues"
   },
-  "homepage": "https://github.com/fedeit/CS595-WebRTC-Design-Implementation#readme"
+  "homepage": "https://github.com/fedeit/CS595-WebRTC-Design-Implementation#readme",
+  "dependencies": {
+    "dotenv": "^10.0.0",
+    "express": "^4.17.1"
+  }
 }

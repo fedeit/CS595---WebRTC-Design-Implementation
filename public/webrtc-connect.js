@@ -1,15 +1,17 @@
+let lc, rc, dc;
+
 let createRoom =  () => {
-    const lc = RTCPeerConnection()
-    const dc = lc.createDataChannel("channel1");
+    lc = new RTCPeerConnection()
+    dc = lc.createDataChannel("channel1");
     dc.onmessage = e => console.log(e.data)
     dc.onopen = e => console.log("Connection opened")
-    lc.onicecandidate = e => console.log("New Ice candidate" + JSON.stringify(lc.localDesceription))
-
+    lc.onicecandidate = e => console.log("New Ice candidate " + JSON.stringify(lc.localDescription))
+    lc.createOffer().then( e => lc.setLocalDescription(e).then(console.log("Description set")))
 }
 
 let connectTo = (offer) => {
-    const rc = new RTCPeerConnection()
-    rc.onicecandidate = e => console.log("New Ice candidate" + JSON.stringify(rc.localDesceription))
+    rc = new RTCPeerConnection()
+    rc.onicecandidate = e => console.log("New Ice candidate" + JSON.stringify(rc.localDescription))
     rc.ondatachannel = e => {
         rc.dc = e.channel
         rc.dc.onmessage = e => console.log(e.data)
