@@ -1,3 +1,15 @@
+const room = {id: 0}
+const socket = io('/')
+let user
+
+fetch('/me/id')
+.then(res => res.json())
+.then((res) => {
+    console.log(res)
+    user = res.user
+    socket.emit('join', room, user)
+})
+
 const config = {
     iceServers: [{
         urls: ["stun:stun.l.google.com:19302"]
@@ -11,6 +23,7 @@ let log = (s) => {
 class WebRTCVideoManager {
     pc = null
     dc = null
+    receivedTrack = null
     addStreams() {
         return new Promise((resolve, reject) => {
             navigator.mediaDevices
@@ -20,8 +33,8 @@ class WebRTCVideoManager {
             })
             .then(stream => {
                 console.log("Getting stream")
-                // const videoFrame = document.querySelector("#localVideo");
-                // videoFrame.srcObject = stream;
+                const videoFrame = document.querySelector("#localVideo");
+                videoFrame.srcObject = stream;
                 stream.getTracks()
                 .forEach((track) => {
                     console.log("...added track")
@@ -31,7 +44,13 @@ class WebRTCVideoManager {
             })
             .catch(reject)
         })
-    }  
+    }
+    
+    onRemoteTrack(e) {
+        console.log("track received")
+        const videoFrame = document.querySelector("#remoteVideo");
+        videoFrame.srcObject = e.streams[0];
+    }
 }
 
 class WebRTCCaller extends WebRTCVideoManager{
@@ -46,8 +65,8 @@ class WebRTCCaller extends WebRTCVideoManager{
             log('Connection opened')
         }
         this.pc.onicecandidate = e => {
-            log(JSON.stringify(this.pc.localDescription))
-            document.getElementById('offer').innerText = JSON.stringify(this.pc.localDescription)
+            log("Ice candidate received")
+            socket.emit('callOffer', user, this.pc.localDescription, room)
         }
         this.pc.createOffer()
         .then( offer => {
@@ -56,28 +75,29 @@ class WebRTCCaller extends WebRTCVideoManager{
                 log('Local description set')
             })
         })
-        this.pc.ontrack = e => {
-            console.log("track received")
-            const videoFrame = document.querySelector("#remoteVideo");
-            videoFrame.srcObject = e.streams[0];
-        };               
-    }
-
-    answer(sdp) {
-        this.pc.setRemoteDescription(sdp)
+        this.pc.ontrack = this.onRemoteTrack    
+        socket.on('responseOffer', (offer) => {
+            if (this.receivedTrack) return
+            this.receivedTrack = true
+            console.log(JSON.stringify(offer))
+            this.pc.setRemoteDescription(offer)
+        })
+           
     }
 }
 
 class WebRTCCallee extends WebRTCVideoManager {
     pc = null
     dc = null
-    async init(offer) {
+    async init() {
         this.pc = new RTCPeerConnection(config)
         await this.addStreams()
+        let responded = false
         this.pc.onicecandidate = (e) => {
-            log(JSON.stringify(this.pc.localDescription))
-            log(e)
-        } 
+            // log(JSON.stringify(this.pc.localDescription))
+            // log(e)
+            socket.emit('responseOffer', user, this.pc.localDescription, room)
+        }
         this.pc.ondatachannel = (e) => {
             this.dc = e.channel
             this.dc.onmessage = (e) => {
@@ -87,22 +107,23 @@ class WebRTCCallee extends WebRTCVideoManager {
                 log('Connection opened')
             }
         }
-        this.pc.setRemoteDescription(offer)
-        .then(e => {
-            console.log('Remote description set')
-        })
-        this.pc.createAnswer()
-        .then( localDesc => {
-            this.pc.setLocalDescription(localDesc)
+        this.pc.ontrack = this.onRemoteTrack    
+        let connected = false
+        socket.on('callOffer', offer => {
+            if (connected) return
+            connected = true
+            this.pc.setRemoteDescription(offer)
             .then(e => {
-                log('Local description set')
+                console.log('Remote description set')
             })
+            this.pc.createAnswer()
+            .then( localDesc => {
+                this.pc.setLocalDescription(localDesc)
+                .then(e => {
+                    log('Local description set')
+                })
+            })            
         })
-        this.pc.ontrack = e => {
-            console.log("track received")
-            const videoFrame = document.querySelector("#remoteVideo");
-            videoFrame.srcObject = e.streams[0];
-        }
     }
 }
 
@@ -111,6 +132,12 @@ window.onload = () => {
     document.getElementById('callButton')
     .onclick = () => {
         caller = new WebRTCCaller()
+        caller.init()
+    }
+
+    document.getElementById('answerButton')
+    .onclick = () => {
+        caller = new WebRTCCallee()
         caller.init()
     }
 }

@@ -34,14 +34,14 @@ io.on('connection', (socket) => {
 
     socket.on('callOffer', (user, offer, room) => {
         console.log(`User ${user.id} requesting call in room`)
-        
+        console.log(offer)
         socket.broadcast.to(room.id)
         .emit('callOffer', offer)
     })
 
     socket.on('responseOffer', (user, offer, room) => {
         console.log(`User ${user.id} responding to call in room`)
-        
+        console.log(offer)
         socket.broadcast.to(room.id)
         .emit('responseOffer', offer)
     })

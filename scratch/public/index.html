@@ -2,10 +2,11 @@
     <header>
         <title>ZOOOOOOM</title>
         <script src="/socket.io/socket.io.js"></script>
-        <script src="webrtc-module.js"></script>
-        <button id="callButton">Call!</button>
+        <script src="webrtc-module.js" defer></script>
     </header>
     <body>
+        <button id="callButton">Call!</button>
+        <button id="answerButton">ans!</button>
         <p id="offer"></p>
         <p>remote</p>
         <video id="remoteVideo" playsinline autoplay></video>
