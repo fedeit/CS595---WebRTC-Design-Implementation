@@ -1,0 +1,69 @@
+<html>
+    <header>
+        <title>Video Chat Demo</title>
+        <script src="peerjs.min.js"></script>
+    </header>
+    <body>
+        <input type="text" id="myid">
+        <button id="setup">Setup</button>
+        <button id="callButton">Call B</button>
+        <h2>Local video</h2>
+        <video id="local" autoplay></video>
+        <h2>Remote video</h2>
+        <video id="remote" autoplay></video>
+    <script>
+        document.getElementById('setup')
+        .onclick = () => {
+            let myid = document.getElementById('myid').value
+            console.log('myid: ' + myid)
+
+            let peer = new Peer(myid, {
+                host: 'localhost',
+                port: 9000,
+                path: '/peerjs'
+            })
+            peer.on('call', async (call) => {
+                console.log('Receiving call')
+                let stream = await navigator.mediaDevices.getUserMedia({video: true, audio: false})
+                call.answer(stream); // Answer the call with an A/V stream.
+                document.getElementById('local').srcObject = stream
+                call.on('stream', (remoteStream) => {
+                    document.getElementById('remote').srcObject = remoteStream
+                }); 
+            });
+
+            peer.on('connection', (conn) => {
+                conn.on('data', (data) => {
+                    console.log(data);
+                });
+                conn.on('open', () => {
+                    conn.send('hello!');
+                });
+            });
+
+            document.getElementById('callButton')
+            .onclick = async () => {
+                let conn = peer.connect('B');
+                conn.on('open', () => {
+                    conn.send('hi!');
+                });
+                let stream = await navigator.mediaDevices.getUserMedia({video: true, audio: false})
+                console.log('setting local')
+                const call = peer.call('B', stream);
+                let video = document.getElementById('local')
+                if ('srcObject' in video) {
+                    video.srcObject = stream;
+                } else {
+                    // Avoid using this in new browsers, as it is going away.
+                    video.src = URL.createObjectURL(stream);
+                }
+                call.on('stream', (remoteStream) => {
+                    console.log('setting remote')
+                    document.getElementById('remote').srcObject = remoteStream
+                });
+            }
+        }
+
+    </script>        
+    </body>
+</html>
