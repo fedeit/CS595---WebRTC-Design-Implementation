@@ -1,0 +1,105 @@
+<html>
+    <head>
+        <title>Video Chat Demo</title>
+        <script src="peerjs.min.js"></script>
+        <link href="https://unpkg.com/@primer/css@^16.0.0/dist/primer.css" rel="stylesheet" />
+    </head>
+    <body>
+        <div class="Header">
+            <div class="Header-item">
+              <a href="#" class="Header-link f4 d-flex flex-items-center">
+                <span>Video Chat App</span>
+              </a>
+            </div>
+            <div class="Header-item Header-item--full">
+            </div>
+            <div id="usernameLabel" class="Header-item">
+                username
+            </div>
+            <div class="Header-item mr-0">
+                <img class="avatar" height="20" alt="@octocat" src="https://github.com/octocat.png" width="20">
+            </div>
+        </div>
+        <div class="Box p-3 m-3">
+            <p id="callerIDLabel"></p>
+            <label for="targetIDInput">Call user: </label>
+            <input class="form-control" type="text" placeholder="fedeit" aria-label="Repository description" id="targetIDInput" required></input>
+            <button class="btn" id="callButton">Call</button>
+        </div>
+        <div id="videoBox" class="Box p-3 m-3">
+            <h2>Remote video</h2>
+            <video id="remote" autoplay></video>
+            <h2>Local video</h2>
+            <video width="320" height="240" id="local" autoplay></video>
+        </div>
+        <script>
+            let currentUser = null
+            let setup = (username) => {
+                let peer = new Peer(username, {
+                    host: 'localhost',
+                    port: 9000,
+                    path: '/peerjs',
+                    debug: 3
+                })
+
+                peer.on('call', async (call) => {
+                    console.log('Receiving call')
+                    let stream = await navigator.mediaDevices.getUserMedia({video: true, audio: false})
+                    document.getElementById('videoBox').style.display = 'block'
+                    document.getElementById('local').srcObject = stream
+                    await call.answer(stream) // Answer the call with an A/V stream.
+                    call.on('stream', (remoteStream) => {
+                        document.getElementById('remote').srcObject = remoteStream
+                    }) 
+                })
+
+                // peer.on('connection', (conn) => {
+                //     document.getElementById('videoBox').style.display = 'block'
+                // })
+
+                document.getElementById('callButton')
+                .onclick = async () => {
+                    let id = document.getElementById('targetIDInput').value
+                    if (id === currentUser) {
+                        return alert('Cannot call yourself')
+                    }
+                    // let conn = peer.connect(id)
+                    // if (!conn) {
+                    //     return alert('User unavailable')
+                    // }
+                    // conn.on('open', () => {
+                    //     document.getElementById('videoBox').style.display = 'block'
+                    // })
+
+                    console.log('setting local')
+                    let stream = await navigator.mediaDevices.getUserMedia({video: true, audio: false})
+                    document.getElementById('videoBox').style.display = 'block'
+                    let video = document.getElementById('local').srcObject = stream
+                    const call = await peer.call(id, stream)
+                    call.on('stream', (remoteStream) => {
+                        console.log('setting remote')
+                        document.getElementById('videoBox').style.display = 'block'
+                        document.getElementById('remote').srcObject = remoteStream
+                    })
+                }
+            }
+
+            window
+            .onload = () => {
+                document.getElementById('videoBox').style.display = 'none'
+                fetch('/auth/me')
+                .then( e => e.json() )
+                .then( user => {
+                    console.log('Logged in as ' + JSON.stringify(user.username))
+                    return user.username
+                })
+                .then((username) => {
+                    currentUser = username
+                    document.getElementById('usernameLabel').innerText = username
+                    setup(username)
+                })
+            }
+
+        </script>        
+    </body>
+</html>
