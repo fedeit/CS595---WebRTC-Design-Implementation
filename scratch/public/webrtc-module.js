@@ -1,5 +1,5 @@
 const room = {id: 0}
-const socket = io('/')
+// const socket = io('/')
 let user
 
 fetch('/me/id')
@@ -7,7 +7,7 @@ fetch('/me/id')
 .then((res) => {
     console.log(res)
     user = res.user
-    socket.emit('join', room, user)
+    // socket.emit('join', room, user)
 })
 
 const config = {
@@ -66,7 +66,8 @@ class WebRTCCaller extends WebRTCVideoManager{
         }
         this.pc.onicecandidate = e => {
             log("Ice candidate received")
-            socket.emit('callOffer', user, this.pc.localDescription, room)
+             console.log(JSON.stringify(this.pc.localDescription))
+            // socket.emit('callOffer', user, this.pc.localDescription, room)
         }
         this.pc.createOffer()
         .then( offer => {
@@ -76,27 +77,28 @@ class WebRTCCaller extends WebRTCVideoManager{
             })
         })
         this.pc.ontrack = this.onRemoteTrack    
-        socket.on('responseOffer', (offer) => {
-            if (this.receivedTrack) return
-            this.receivedTrack = true
-            console.log(JSON.stringify(offer))
-            this.pc.setRemoteDescription(offer)
-        })
-           
+        // socket.on('responseOffer', (offer) => {
+        //     if (this.receivedTrack) return
+        //     this.receivedTrack = true
+        //     console.log(JSON.stringify(offer))
+        //     this.pc.setRemoteDescription(offer)
+        // })
+    }
+
+    answer(offer) {
+        this.pc.setRemoteDescription(offer)
     }
 }
 
 class WebRTCCallee extends WebRTCVideoManager {
     pc = null
     dc = null
-    async init() {
+    async init(offer) {
         this.pc = new RTCPeerConnection(config)
         await this.addStreams()
-        let responded = false
         this.pc.onicecandidate = (e) => {
-            // log(JSON.stringify(this.pc.localDescription))
-            // log(e)
-            socket.emit('responseOffer', user, this.pc.localDescription, room)
+            log(JSON.stringify(this.pc.localDescription))
+            // socket.emit('responseOffer', user, this.pc.localDescription, room)
         }
         this.pc.ondatachannel = (e) => {
             this.dc = e.channel
@@ -109,21 +111,19 @@ class WebRTCCallee extends WebRTCVideoManager {
         }
         this.pc.ontrack = this.onRemoteTrack    
         let connected = false
-        socket.on('callOffer', offer => {
-            if (connected) return
-            connected = true
-            this.pc.setRemoteDescription(offer)
-            .then(e => {
-                console.log('Remote description set')
-            })
-            this.pc.createAnswer()
-            .then( localDesc => {
-                this.pc.setLocalDescription(localDesc)
-                .then(e => {
-                    log('Local description set')
-                })
-            })            
+        // socket.on('callOffer', offer => {
+        this.pc.setRemoteDescription(offer)
+        .then(e => {
+            console.log('Remote description set')
         })
+        this.pc.createAnswer()
+        .then( localDesc => {
+            this.pc.setLocalDescription(localDesc)
+            .then(e => {
+                log('Local description set')
+            })
+        })            
+        // })
     }
 }
 
