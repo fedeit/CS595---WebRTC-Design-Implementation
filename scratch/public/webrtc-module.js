@@ -2,6 +2,8 @@ const room = {id: 0}
 const socket = io('/')
 let user
 
+const WAIT_TIME = 2000
+
 fetch('/me/id')
 .then(res => res.json())
 .then((res) => {
@@ -77,7 +79,7 @@ class WebRTCCaller extends WebRTCVideoManager{
         })
         setTimeout(() => {
             socket.emit('callOffer', user, this.pc.localDescription, room)
-        }, 5000)
+        }, WAIT_TIME)
         this.pc.ontrack = this.onRemoteTrack    
         socket.on('responseOffer', (offer) => {
             console.log(JSON.stringify(offer))
@@ -99,9 +101,6 @@ class WebRTCCallee extends WebRTCVideoManager {
         this.pc.onicecandidate = (e) => {
             log(JSON.stringify(this.pc.localDescription))
         }
-        setTimeout(() => {
-            socket.emit('responseOffer', user, this.pc.localDescription, room)
-        }, 5000, )
         this.pc.ondatachannel = (e) => {
             this.dc = e.channel
             this.dc.onmessage = (e) => {
@@ -122,6 +121,9 @@ class WebRTCCallee extends WebRTCVideoManager {
                 this.pc.setLocalDescription(localDesc)
                 .then(e => {
                     log('Local description set')
+                    setTimeout(() => {
+                        socket.emit('responseOffer', user, this.pc.localDescription, room)
+                    }, WAIT_TIME)            
                 })
             })            
         })
@@ -130,14 +132,17 @@ class WebRTCCallee extends WebRTCVideoManager {
 
 let caller, callee
 window.onload = () => {
+    document.getElementById('videoBox').style.display = 'none'
     document.getElementById('callButton')
     .onclick = () => {
+        document.getElementById('videoBox').style.display = 'block'
         caller = new WebRTCCaller()
         caller.init()
     }
 
     document.getElementById('answerButton')
     .onclick = () => {
+        document.getElementById('videoBox').style.display = 'block'
         caller = new WebRTCCallee()
         caller.init()
     }

@@ -1,16 +1,42 @@
 <html>
-    <header>
-        <title>ZOOOOOOM</title>
+    <head>
+        <title>Video Chat Demo</title>
         <script src="/socket.io/socket.io.js"></script>
         <script src="webrtc-module.js" defer></script>
-    </header>
+        <link href="https://unpkg.com/@primer/css@^16.0.0/dist/primer.css" rel="stylesheet" />
+    </head>
     <body>
-        <button id="callButton">Call!</button>
-        <button id="answerButton">ans!</button>
-        <p id="offer"></p>
-        <p>remote</p>
-        <video id="remoteVideo" playsinline autoplay></video>
-        <p>local</p>
-        <video id="localVideo" playsinline autoplay></video>
+        <div class="Header">
+            <div class="Header-item">
+              <a href="#" class="Header-link f4 d-flex flex-items-center">
+                <span>Video Chat App</span>
+              </a>
+            </div>
+            <div class="Header-item Header-item--full">
+            </div>
+            <div id="usernameLabel" class="Header-item">
+                Default User
+            </div>
+            <div class="Header-item mr-0">
+                <img class="avatar" height="20" alt="@octocat" src="https://github.com/octocat.png" width="20">
+            </div>
+        </div>
+        <div class="Box p-3 m-3">
+            <p id="callerIDLabel"></p>
+            <button class="btn" id="callButton">I am a caller</button>
+            <button class="btn" id="answerButton">I am a callee</button>
+        </div>
+        <div id="videoBox" class="Box p-3 m-3">
+            <div class="container-lg clearfix">
+                <div class="col-9 float-left border">
+                    <h2>Remote video</h2>
+                    <video width="100%" id="remoteVideo" autoplay></video>
+                </div>
+                <div class="col-3 float-left border">
+                    <h2>Local video</h2>
+                    <video width="100%" height="240" id="localVideo" autoplay></video>
+                </div>
+              </div>
+        </div>     
     </body>
 </html>
