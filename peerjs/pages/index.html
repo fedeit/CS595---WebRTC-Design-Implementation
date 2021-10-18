@@ -44,7 +44,7 @@
 
                 peer.on('call', async (call) => {
                     console.log('Receiving call')
-                    let stream = await navigator.mediaDevices.getUserMedia({video: true, audio: false})
+                    let stream = await navigator.mediaDevices.getUserMedia({video: true, audio: true})
                     document.getElementById('videoBox').style.display = 'block'
                     document.getElementById('local').srcObject = stream
                     await call.answer(stream) // Answer the call with an A/V stream.
@@ -72,7 +72,7 @@
                     // })
 
                     console.log('setting local')
-                    let stream = await navigator.mediaDevices.getUserMedia({video: true, audio: false})
+                    let stream = await navigator.mediaDevices.getUserMedia({video: true, audio: true})
                     document.getElementById('videoBox').style.display = 'block'
                     let video = document.getElementById('local').srcObject = stream
                     const call = await peer.call(id, stream)
